@@ -1,0 +1,22 @@
+server:
+  port: 0
+
+spring:
+  application:
+    name: call-monitoring-backend-test
+
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:db/schema.sql
+
+logging:
+  level:
+    root: INFO
+    com.iqbal.callmonitoring: DEBUG
