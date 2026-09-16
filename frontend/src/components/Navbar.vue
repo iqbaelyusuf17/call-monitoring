@@ -3,13 +3,13 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
       <!-- Brand & Menu Title (AC-1) -->
       <div class="flex items-center space-x-3">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-700 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-red-800 via-red-700 to-rose-600 flex items-center justify-center text-white shadow-md shadow-red-700/20">
           <PhoneCall class="w-5 h-5" />
         </div>
         <div>
           <div class="flex items-center space-x-2">
             <h1 class="text-base font-bold text-slate-900 tracking-tight">Call Monitoring</h1>
-            <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-red-50 text-red-700 border border-red-200">
               Monitoring Menu
             </span>
           </div>

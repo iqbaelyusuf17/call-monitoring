@@ -137,7 +137,7 @@ function getSortIcon(column) {
 
 function getSortIconColor(column) {
   if (props.sorting.sortBy === column) {
-    return 'text-blue-600'
+    return 'text-red-700'
   }
   return 'text-slate-400'
 }

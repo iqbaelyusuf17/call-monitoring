@@ -2,7 +2,7 @@
   <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 mb-6">
     <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
       <div class="flex items-center space-x-2">
-        <Filter class="w-4 h-4 text-blue-600" />
+        <Filter class="w-4 h-4 text-red-700" />
         <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider">Call Filters & Search</h2>
       </div>
       <button
@@ -26,7 +26,7 @@
             v-model="localFilters.search"
             @input="onFilterChange"
             placeholder="Search by ID, CS, or Customer..."
-            class="w-full pl-9 pr-3 py-2 text-xs rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white placeholder-slate-400 transition"
+            class="w-full pl-9 pr-3 py-2 text-xs rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-red-600 bg-white placeholder-slate-400 transition"
           />
         </div>
       </div>
@@ -42,7 +42,7 @@
             :min="minDate"
             :max="localFilters.endDate || maxDate"
             @change="onFilterChange"
-            class="w-full pl-9 pr-3 py-2 text-xs rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-slate-700 transition"
+            class="w-full pl-9 pr-3 py-2 text-xs rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-red-600 bg-white text-slate-700 transition"
           />
         </div>
       </div>
@@ -58,7 +58,7 @@
             :min="localFilters.startDate || minDate"
             :max="maxDate"
             @change="onFilterChange"
-            class="w-full pl-9 pr-3 py-2 text-xs rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-slate-700 transition"
+            class="w-full pl-9 pr-3 py-2 text-xs rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-red-600 bg-white text-slate-700 transition"
           />
         </div>
       </div>
@@ -69,7 +69,7 @@
         <select
           v-model="localFilters.sentiment"
           @change="onFilterChange"
-          class="w-full px-3 py-2 text-xs rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-slate-700 transition cursor-pointer"
+          class="w-full px-3 py-2 text-xs rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-red-600 bg-white text-slate-700 transition cursor-pointer"
         >
           <option value="ALL">All Sentiments</option>
           <option value="UNDER_70">Under 70% (&lt; 70%)</option>

@@ -30,7 +30,7 @@
 
       <!-- 4. Loading State -->
       <div v-if="isLoading" class="bg-white rounded-xl shadow-sm border border-slate-200 p-12 text-center my-6">
-        <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-600 border-t-transparent mb-3"></div>
+        <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-red-700 border-t-transparent mb-3"></div>
         <p class="text-xs font-semibold text-slate-600">Loading call monitoring records...</p>
       </div>
 
