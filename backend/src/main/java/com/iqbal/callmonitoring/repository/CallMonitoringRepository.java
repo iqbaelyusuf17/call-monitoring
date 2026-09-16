@@ -1,4 +1,4 @@
-﻿package com.iqbal.callmonitoring.repository;
+package com.iqbal.callmonitoring.repository;
 
 import com.iqbal.callmonitoring.dto.request.CallMonitoringFilterRequest;
 import com.iqbal.callmonitoring.entity.CallMonitoring;

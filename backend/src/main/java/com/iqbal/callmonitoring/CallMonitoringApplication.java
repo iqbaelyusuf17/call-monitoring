@@ -1,4 +1,4 @@
-﻿package com.iqbal.callmonitoring;
+package com.iqbal.callmonitoring;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

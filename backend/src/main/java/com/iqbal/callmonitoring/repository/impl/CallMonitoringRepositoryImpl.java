@@ -1,4 +1,4 @@
-﻿package com.iqbal.callmonitoring.repository.impl;
+package com.iqbal.callmonitoring.repository.impl;
 
 import com.iqbal.callmonitoring.dto.request.CallMonitoringFilterRequest;
 import com.iqbal.callmonitoring.entity.CallMonitoring;
@@ -20,7 +20,7 @@ import java.time.ZoneOffset;
 @Repository
 public class CallMonitoringRepositoryImpl extends AbstractJdbcRepository implements CallMonitoringRepository {
 
-    private static final String SELECT_COLUMNS = cm.call_id, cm.call_timestamp, cm.cs_name, cm.customer_name, cm.sentiment_score;
+    private static final String SELECT_COLUMNS = "cm.call_id, cm.call_timestamp, cm.cs_name, cm.customer_name, cm.sentiment_score";
 
     public CallMonitoringRepositoryImpl(NamedParameterJdbcTemplate jdbcTemplate) {
         super(jdbcTemplate);
@@ -28,7 +28,7 @@ public class CallMonitoringRepositoryImpl extends AbstractJdbcRepository impleme
 
     private static final RowMapper<CallMonitoring> ROW_MAPPER = (rs, rowNum) -> {
         OffsetDateTime timestamp = null;
-        Object tsObj = rs.getObject(call_timestamp);
+        Object tsObj = rs.getObject("call_timestamp");
         if (tsObj instanceof OffsetDateTime odt) {
             timestamp = odt;
         } else if (tsObj instanceof Timestamp ts) {
@@ -38,22 +38,23 @@ public class CallMonitoringRepositoryImpl extends AbstractJdbcRepository impleme
         }
 
         return CallMonitoring.builder()
-                .callId(rs.getString(call_id))
+                .callId(rs.getString("call_id"))
                 .callTimestamp(timestamp)
-                .csName(rs.getString(cs_name))
-                .customerName(rs.getString(customer_name))
-                .sentimentScore(rs.getBigDecimal(sentiment_score))
+                .csName(rs.getString("cs_name"))
+                .customerName(rs.getString("customer_name"))
+                .sentimentScore(rs.getBigDecimal("sentiment_score"))
                 .build();
     };
 
     /**
-     * Membangun klausa FROM dan kondisi WHERE dinamis dengan parameterized SQL.
+     * Membangun klausa FROM, JOIN (jika ada), dan kondisi WHERE dinamis.
+     * Logika query tetap 100% utuh dan terlihat di sini (tidak terpecah-pecah).
      */
     private StringBuilder buildQueryFrom(CallMonitoringFilterRequest request, MapSqlParameterSource params) {
-        StringBuilder queryFrom = new StringBuilder("
+        StringBuilder queryFrom = new StringBuilder("""
             FROM call_monitorings cm
             WHERE TRUE
-        ");
+        """);
 
         if (request == null) {
             return queryFrom;
@@ -61,35 +62,37 @@ public class CallMonitoringRepositoryImpl extends AbstractJdbcRepository impleme
 
         // 1. Filter periode (Inclusive)
         if (request.getStartDate() != null) {
-            queryFrom.append( AND cm.call_timestamp >= :startDate);
-            params.addValue(startDate, request.getStartDate().atStartOfDay().atOffset(ZoneOffset.UTC));
+            queryFrom.append(" AND cm.call_timestamp >= :startDate");
+            params.addValue("startDate", request.getStartDate().atStartOfDay().atOffset(ZoneOffset.UTC));
         }
         if (request.getEndDate() != null) {
-            queryFrom.append( AND cm.call_timestamp <= :endDate);
-            params.addValue(endDate, request.getEndDate().atTime(LocalTime.MAX).atOffset(ZoneOffset.UTC));
+            queryFrom.append(" AND cm.call_timestamp <= :endDate");
+            params.addValue("endDate", request.getEndDate().atTime(LocalTime.MAX).atOffset(ZoneOffset.UTC));
         }
 
         // 2. Filter sentimen (null-safe)
-        if (UNDER_70.equalsIgnoreCase(request.getSentiment())) {
-            queryFrom.append( AND (cm.sentiment_score IS NOT NULL AND cm.sentiment_score < 70.00));
-        } else if (70_AND_ABOVE.equalsIgnoreCase(request.getSentiment())) {
-            queryFrom.append( AND (cm.sentiment_score IS NOT NULL AND cm.sentiment_score >= 70.00));
+        if ("UNDER_70".equalsIgnoreCase(request.getSentiment())) {
+            queryFrom.append(" AND (cm.sentiment_score IS NOT NULL AND cm.sentiment_score < 70.00)");
+        } else if ("70_AND_ABOVE".equalsIgnoreCase(request.getSentiment())) {
+            queryFrom.append(" AND (cm.sentiment_score IS NOT NULL AND cm.sentiment_score >= 70.00)");
         }
 
         // 3. Pencarian kata kunci global (null-safe)
         if (request.getSearch() != null && !request.getSearch().trim().isEmpty()) {
-            queryFrom.append("
+            queryFrom.append("""
                  AND (
                     LOWER(cm.call_id) LIKE :search
                     OR (cm.cs_name IS NOT NULL AND LOWER(cm.cs_name) LIKE :search)
                     OR (cm.customer_name IS NOT NULL AND LOWER(cm.customer_name) LIKE :search)
                  )
-            ");
-            params.addValue(search, % + request.getSearch().trim().toLowerCase() + %);
+            """);
+            params.addValue("search", "%" + request.getSearch().trim().toLowerCase() + "%");
         }
 
         return queryFrom;
     }
+
+
 
     @Override
     public PagingResult<CallMonitoring> findWithPaging(
@@ -101,6 +104,6 @@ public class CallMonitoringRepositoryImpl extends AbstractJdbcRepository impleme
     ) {
         MapSqlParameterSource params = new MapSqlParameterSource();
         StringBuilder queryFrom = buildQueryFrom(request, params);
-        return executePagingResult(COUNT(*), SELECT_COLUMNS, queryFrom, params, page, limit, sortColumn, sortDirection, ROW_MAPPER);
+        return executePagingResult("COUNT(*) ", SELECT_COLUMNS, queryFrom, params, page, limit, sortColumn, sortDirection, ROW_MAPPER);
     }
 }

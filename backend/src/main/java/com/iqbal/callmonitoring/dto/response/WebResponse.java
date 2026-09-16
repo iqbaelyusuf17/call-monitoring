@@ -1,4 +1,4 @@
-﻿package com.iqbal.callmonitoring.dto.response;
+package com.iqbal.callmonitoring.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
@@ -21,13 +21,24 @@ public class WebResponse<T> {
     public static <T> WebResponse<T> success(T data, PaginationMeta meta) {
         return WebResponse.<T>builder()
                 .code(200)
-                .message(Success)
+                .message("Success")
                 .data(data)
                 .meta(meta)
                 .build();
     }
 
     public static <T> WebResponse<T> success(T data) {
-        return success(data, null);
+        return WebResponse.<T>builder()
+                .code(200)
+                .message("Success")
+                .data(data)
+                .build();
+    }
+
+    public static <T> WebResponse<T> error(int code, String message) {
+        return WebResponse.<T>builder()
+                .code(code)
+                .message(message)
+                .build();
     }
 }
