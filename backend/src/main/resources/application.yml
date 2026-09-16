@@ -1,0 +1,22 @@
+﻿server:
+  port: 8080
+
+spring:
+  application:
+    name: call-monitoring-backend
+
+  datasource:
+    url: jdbc:h2:mem:callmonitoringdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:db/schema.sql
+
+logging:
+  level:
+    root: INFO
+    com.iqbal.callmonitoring: DEBUG
