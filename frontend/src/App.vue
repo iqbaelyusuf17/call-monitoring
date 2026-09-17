@@ -44,6 +44,7 @@
       <div v-else>
         <CallTable
           :records="records"
+          :meta="meta"
           :sorting="sorting"
           @sort="toggleSort"
         />

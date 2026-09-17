@@ -4,6 +4,11 @@
       <table class="min-w-full divide-y divide-slate-200 text-left text-xs">
         <thead class="bg-slate-50 text-slate-600 font-bold uppercase tracking-wider">
           <tr>
+            <!-- 0. No. (AC-2) -->
+            <th scope="col" class="px-4 py-3.5 w-16 text-center">
+              No.
+            </th>
+
             <!-- 1. Call ID (Clickable Sort - AC-10) -->
             <th
               scope="col"
@@ -68,10 +73,15 @@
 
         <tbody class="divide-y divide-slate-100 text-slate-700">
           <tr
-            v-for="row in records"
+            v-for="(row, index) in records"
             :key="row.call_id"
             class="hover:bg-slate-50/80 transition-colors"
           >
+            <!-- 0. No. (AC-2) -->
+            <td class="px-4 py-3.5 text-center font-mono text-slate-500 font-medium">
+              {{ calculateRowNumber(index) }}
+            </td>
+
             <!-- 1. Call ID -->
             <td class="px-4 py-3.5 font-semibold text-slate-900 font-mono">
               {{ row.call_id }}
@@ -120,6 +130,10 @@ const props = defineProps({
     type: Array,
     required: true,
   },
+  meta: {
+    type: Object,
+    default: () => ({ page: 1, limit: 10 }),
+  },
   sorting: {
     type: Object,
     default: () => ({ sortBy: 'call_timestamp', sortOrder: 'desc' }),
@@ -127,6 +141,12 @@ const props = defineProps({
 })
 
 defineEmits(['sort'])
+
+function calculateRowNumber(index) {
+  const page = props.meta?.page || 1
+  const limit = props.meta?.limit || 10
+  return (page - 1) * limit + index + 1
+}
 
 function getSortIcon(column) {
   if (props.sorting.sortBy !== column) {
