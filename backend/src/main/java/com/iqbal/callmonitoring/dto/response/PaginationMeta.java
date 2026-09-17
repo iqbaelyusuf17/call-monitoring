@@ -26,4 +26,16 @@ public class PaginationMeta {
 
     @JsonProperty("has_next")
     private boolean hasNext;
+
+    public static PaginationMeta of(int page, int limit, long totalRecords) {
+        int totalPages = limit > 0 ? (int) Math.ceil((double) totalRecords / limit) : 0;
+        return PaginationMeta.builder()
+                .page(page)
+                .limit(limit)
+                .totalRecords(totalRecords)
+                .totalPages(totalPages)
+                .hasPrevious(page > 1)
+                .hasNext(page < totalPages)
+                .build();
+    }
 }

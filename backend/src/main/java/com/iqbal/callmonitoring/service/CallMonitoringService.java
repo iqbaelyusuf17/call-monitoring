@@ -37,45 +37,38 @@ public class CallMonitoringService {
     );
 
     public WebResponse<List<CallMonitoringResponse>> getCallMonitorings(CallMonitoringFilterRequest request) {
-        log.info("Processing call monitorings query with custom repository: {}", request);
+        log.info("Processing call monitorings query: {}", request);
 
-        // 1. Validate period rules (max 3 months)
+        // 1. Validasi periode waktu (maks 3 bulan)
         dateRangeValidator.validate(request.getStartDate(), request.getEndDate());
 
-        // 2. Resolve pagination parameters
-        int page = (request.getPage() != null && request.getPage() > 0) ? request.getPage() : 1;
-        int limit = (request.getLimit() != null && request.getLimit() > 0) ? request.getLimit() : 5;
+        // 2. Resolve parameter paging & sorting
+        int page = request.getPageOrDefault(1);
+        int limit = request.getLimitOrDefault(5);
 
-        // 3. Resolve sorting column & direction safely
-        String requestedSortBy = (request.getSortBy() != null) ? request.getSortBy().toLowerCase() : "call_timestamp";
-        String sortColumn = ALLOWED_SORT_COLUMNS.getOrDefault(requestedSortBy, "cm.call_timestamp");
-        String sortDirection = "asc".equalsIgnoreCase(request.getSortOrder()) ? "ASC" : "DESC";
-
-        // 4. Single unified call for paging data and total count
+        // 3. Panggil repository dengan query terpadu (data & total count)
         PagingResult<CallMonitoring> pagingResult = callMonitoringRepository.findWithPaging(
-                request, page, limit, sortColumn, sortDirection
+                request,
+                page,
+                limit,
+                resolveSortColumn(request.getSortBy()),
+                request.getSortDirectionOrDefault("DESC")
         );
 
-        long totalRecords = pagingResult.totalRecords();
+        // 4. Map entity ke response DTO
         List<CallMonitoringResponse> content = pagingResult.data().stream()
                 .map(this::mapToResponse)
                 .toList();
 
-        // 5. Calculate pagination metadata
-        int totalPages = (int) Math.ceil((double) totalRecords / limit);
-        boolean hasPrevious = page > 1;
-        boolean hasNext = page < totalPages;
+        // 5. Kembalikan response terpadu dengan pagination metadata terenkapsulasi
+        return WebResponse.success(content, PaginationMeta.of(page, limit, pagingResult.totalRecords()));
+    }
 
-        PaginationMeta meta = PaginationMeta.builder()
-                .page(page)
-                .limit(limit)
-                .totalRecords(totalRecords)
-                .totalPages(totalPages)
-                .hasPrevious(hasPrevious)
-                .hasNext(hasNext)
-                .build();
-
-        return WebResponse.success(content, meta);
+    private String resolveSortColumn(String sortBy) {
+        if (sortBy == null) {
+            return "cm.call_timestamp";
+        }
+        return ALLOWED_SORT_COLUMNS.getOrDefault(sortBy.toLowerCase(), "cm.call_timestamp");
     }
 
     private CallMonitoringResponse mapToResponse(CallMonitoring entity) {

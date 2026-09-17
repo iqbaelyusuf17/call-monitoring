@@ -38,4 +38,19 @@ public record CallMonitoringFilterRequest(
     public String getSentiment() { return sentiment(); }
     public String getSortBy() { return sortBy(); }
     public String getSortOrder() { return sortOrder(); }
+
+    public int getPageOrDefault(int defaultValue) {
+        return (page != null && page > 0) ? page : defaultValue;
+    }
+
+    public int getLimitOrDefault(int defaultValue) {
+        return (limit != null && limit > 0) ? limit : defaultValue;
+    }
+
+    public String getSortDirectionOrDefault(String defaultDirection) {
+        if (sortOrder == null || sortOrder.isBlank()) {
+            return defaultDirection;
+        }
+        return "asc".equalsIgnoreCase(sortOrder) ? "ASC" : "DESC";
+    }
 }
