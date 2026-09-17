@@ -84,24 +84,31 @@ This application implements User Story **THT-MON-US-001** (*Customer Call Monito
 ## Project Directory Structure
 
 ```text
-take-home-test-cn/
+call-monitoring/
 ├── backend/
 │   ├── src/
 │   │   ├── main/
-│   │   │   ├── java/com/bank/callmonitoring/
-│   │   │   │   ├── config/            # CorsConfig, WebMvcConfig
+│   │   │   ├── java/com/iqbal/callmonitoring/
+│   │   │   │   ├── config/            # CorsConfig, ApiLoggingFilter
 │   │   │   │   ├── controller/        # CallMonitoringController
 │   │   │   │   ├── dto/               # Request DTO, Response wrappers
 │   │   │   │   ├── entity/            # CallMonitoring model
-│   │   │   │   ├── filter/            # ApiLoggingFilter (traceId / correlation)
+│   │   │   │   ├── exception/         # BadRequestException, GlobalExceptionHandler
 │   │   │   │   ├── repository/        # AbstractJdbcRepository, CallMonitoringRepository
-│   │   │   │   └── service/           # CallMonitoringService
+│   │   │   │   ├── service/           # CallMonitoringService
+│   │   │   │   └── validator/         # DateRangeValidator
 │   │   │   └── resources/
 │   │   │       ├── application.yml    # App configuration & H2/Postgres profiles
 │   │   │       └── db/
 │   │   │           ├── schema.sql     # DDL table creation
-│   │   │           └── data.sql       # Initial seed records
+│   │   │           └── data.sql       # 100 seed records
 │   │   └── test/                      # 15 automated backend test suites
+│   │       ├── java/com/iqbal/callmonitoring/
+│   │       │   ├── controller/        # CallMonitoringControllerTest (4 tests)
+│   │       │   ├── repository/        # CallMonitoringRepositoryTest (7 tests)
+│   │       │   └── service/           # CallMonitoringServiceTest (4 tests)
+│   │       └── resources/
+│   │           └── application.yml
 │   ├── mvnw / mvnw.cmd
 │   └── pom.xml
 ├── frontend/
@@ -115,6 +122,7 @@ take-home-test-cn/
 │   │   │   └── Pagination.vue         # Record counter & Prev/Next controls
 │   │   ├── composables/               # useCallMonitoring reactive state
 │   │   ├── utils/                     # dateFormatter, numberFormatter
+│   │   │   └── __tests__/             # formatters.spec.js (7 unit tests)
 │   │   ├── App.vue                    # Main layout container
 │   │   └── main.js
 │   ├── package.json
@@ -212,10 +220,9 @@ cd backend
 ./mvnw test        # Linux / macOS
 ```
 - **Test Coverage**:
-  - `CallMonitoringControllerTest`: Controller layer endpoint tests, parameter binding, and status assertions (`@WebMvcTest`).
-  - `CallMonitoringServiceTest`: Service layer business logic and repository delegation verification.
-  - `CallMonitoringRepositoryTest`: Pure JDBC execution, dynamic query assembly, pagination calculation, and parameter binding.
-  - `CallMonitoringApplicationTests`: Spring Boot application context load verification.
+  - `CallMonitoringControllerTest` (4 tests): Controller layer endpoint tests, query parameter binding, response DTO verification, and `X-Trace-Id` header assertion (`@WebMvcTest`).
+  - `CallMonitoringServiceTest` (4 tests): Service layer business logic, boundary limit/page clamping, and repository delegation verification (Mockito).
+  - `CallMonitoringRepositoryTest` (7 tests): Pure JDBC execution on H2/Postgres mode, dynamic query assembly, multi-column search, date period filtering, sentiment thresholds, and dynamic sorting.
 
 ### Frontend Unit Tests (7 Tests)
 ```bash
@@ -288,26 +295,44 @@ Host: localhost:8080
 
 In accordance with the Take-Home Test evaluation guidelines, this section provides full transparency regarding the utilization of AI assistance during the planning, implementation, and testing phases of this project.
 
-### 1. Tools & Models Used
+### 1. AI Tool yang Digunakan (Tools & Models Used)
 - **AI Coding Assistant**: Google Antigravity (Powered by Gemini 2.5 Pro)
 
-### 2. Prompts & Interaction Summary
-- **Architecture & Scaffolding**: Formulated prompts to architect an enterprise-grade pure Spring JDBC repository pattern without JPA, featuring reusable pagination calculus and custom distinct count query mechanisms.
-- **SQL & Data Generation**: Prompted to generate 100 realistic seed records distributed across the last 3 months (June – September 2026) with balanced sentiment scores (< 70% and >= 70%) and representative Indonesian names.
-- **Testing Scenarios**: Prompts used to generate comprehensive edge-case test suites for date parsing, number rounding, and controller parameter bindings.
+### 2. Bagian Pekerjaan yang Dibantu AI (Work Assisted by AI)
+- **Scaffolding & Boilerplate**: Pembuatan struktur awal proyek Spring Boot (Maven dependencies, `pom.xml`, konfigurasi awal Vite + Vue 3).
+- **Data Mocking & Seed Generation**: Pembuatan generator 100 record data dummy realistis (distribusi 3 bulan terakhir Juni–September 2026, kombinasi sentimen `< 70%` dan `>= 70%`, dan nama Indonesia).
+- **Template Unit Test**: Penyusunan kerangka awal test suite JUnit 5 (`@WebMvcTest`, Mockito) dan Vitest test specs.
 
-### 3. What Was Generated vs. Manually Reviewed & Modified
-- **AI-Generated**:
-  - Initial project boilerplate structures (Maven dependencies, Vite + Vue 3 config).
-  - Seed data generation script producing 100 realistic records.
-  - Initial scaffolding for Vitest and JUnit test suites.
-- **Manually Engineered / Modified & Verified**:
-  - **Custom Pagination Calculus**: Verified and fine-tuned `AbstractJdbcRepository` to guarantee accurate `COUNT` queries and safe parameter binding preventing SQL injection.
-  - **Routing Architecture**: Adjusted API routing to strictly use `@RequestMapping("/api/v1")` at the class level and `@GetMapping("/call-monitoring")` at the method level.
-  - **Distributed Tracing**: Implemented `ApiLoggingFilter` using SLF4J MDC and `AsyncLocalStorage`-compatible correlation patterns with `X-Trace-Id` headers.
-  - **UX & Localization Refinement**: Tailored the UI components to adhere strictly to supervisor user story specifications—standardizing all user-facing labels to English, removing redundant row index columns, and simplifying pagination to total count and navigation buttons.
+### 3. Contoh Prompt Utama (Key Prompts Used)
 
-### 4. Validation Steps Taken
-- **Automated Testing**: 15 backend tests (JUnit 5 / Mockito) and 7 frontend unit tests (Vitest) executed and passed with 100% success rate.
-- **Production Build Verification**: Executed full production builds (`npm run build` and Maven package) verifying zero build warnings or type discrepancies.
-- **Security & Code Quality**: Audited SQL queries for parameter injection vulnerabilities and validated reactive state management against race conditions during debounced filter inputs.
+1. **Arsitektur Repository Pure Spring JDBC**:
+   > *"Rancang base repository `AbstractJdbcRepository` menggunakan Pure Spring JDBC (`NamedParameterJdbcTemplate`) tanpa JPA/Hibernate. Sediakan kalkulasi offset pagination terpadu, dynamic sorting, parameterized query binding untuk mencegah SQL injection, dan hook method `getCustomCountQuery()` untuk mendukung query count kustom bila diperlukan."*
+
+2. **Backend API & Observability Routing**:
+   > *"Buat REST Controller untuk User Story THT-MON-US-001 dengan class routing `@RequestMapping("/api/v1")` dan method `@GetMapping("/call-monitoring")`. Sertakan HTTP servlet filter `ApiLoggingFilter` yang menyematkan distributed `traceId` ke SLF4J MDC, response header `X-Trace-Id`, serta mencatat durasi eksekusi request."*
+
+3. **Frontend Composable & UI Craftsmanship**:
+   > *"Implementasikan reactive composable `useCallMonitoring` di Vue 3 yang mengelola filter pencarian (debounce 300ms), date range (terkunci maksimal 3 bulan terakhir), customer sentiment filter, multi-column sorting, dan paginasi yang mempertahankan state filter aktif saat berpindah halaman (AC-11). Terapkan tema warna merah khas CIMB Niaga pada tombol, header, dan badge."*
+
+### 4. Cara Kandidat Memeriksa dan Memverifikasi Hasil AI (Verification & Quality Control)
+
+Setiap kode yang dihasilkan AI melewati 4 lapis verifikasi ketat oleh kandidat sebelum di-commit:
+
+1. **Verifikasi Kesesuaian Arsitektur (Architectural Compliance)**:
+   - Memastikan AI tidak menyelundupkan ketergantungan JPA/Hibernate, melainkan 100% patuh pada Native Spring JDBC (`NamedParameterJdbcTemplate`).
+   - Memeriksa struktur service layer agar menggunakan direct `@Service` class tanpa *over-engineering* interface yang redundan.
+   - Memastikan penamaan endpoint strictly mengikuti REST convention (`/api/v1/call-monitoring`).
+
+2. **Audit Keamanan & Integritas Query (Security & SQL Injection)**:
+   - Mengaudit setiap baris dynamic SQL untuk memastikan seluruh parameter input (`search`, `startDate`, `endDate`, `sentiment`) dibinding secara aman melalui `MapSqlParameterSource`.
+   - Mengimplementasikan whitelist mapping pada parameter `sortBy` guna memblokir potensi SQL injection via identifier kolom.
+
+3. **Validasi Logika Bisnis & Edge Cases (Business Logic Validation)**:
+   - Memverifikasi kalkulasi offset pagination `(page - 1) * limit` agar tidak terjadi *off-by-one error*.
+   - Memverifikasi filter tanggal 3 bulan terakhir di sisi frontend (`min` dan `max` date) dan backend (inclusive `atStartOfDay` s.d. `atTime(LocalTime.MAX)`).
+   - Memverifikasi konsistensi klasifikasi skor sentimen (`< 70%` dan `>= 70%`) baik pada database query (`NUMERIC(5,2)`) maupun visual badge UI.
+
+4. **Eksekusi Pengujian Otomatis & Build Verifikasi (Automated Testing & Build)**:
+   - **Backend Testing**: Mengeksekusi `.\mvnw.cmd test` dan memastikan 15 test suites (Controller, Service, Repository) lulus 100%.
+   - **Frontend Testing**: Mengeksekusi `npm run test` (Vitest) untuk memastikan 7 unit test formatters lulus 100%.
+   - **Production Build**: Mengeksekusi `npm run build` untuk memverifikasi nol compile warning dan tidak ada broken imports.
