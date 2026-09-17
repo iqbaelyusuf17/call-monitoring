@@ -295,44 +295,44 @@ Host: localhost:8080
 
 In accordance with the Take-Home Test evaluation guidelines, this section provides full transparency regarding the utilization of AI assistance during the planning, implementation, and testing phases of this project.
 
-### 1. AI Tool yang Digunakan (Tools & Models Used)
+### 1. AI Tools & Models Used
 - **AI Coding Assistant**: Google Antigravity (Powered by Gemini 2.5 Pro)
 
-### 2. Bagian Pekerjaan yang Dibantu AI (Work Assisted by AI)
-- **Scaffolding & Boilerplate**: Pembuatan struktur awal proyek Spring Boot (Maven dependencies, `pom.xml`, konfigurasi awal Vite + Vue 3).
-- **Data Mocking & Seed Generation**: Pembuatan generator 100 record data dummy realistis (distribusi 3 bulan terakhir Juni–September 2026, kombinasi sentimen `< 70%` dan `>= 70%`, dan nama Indonesia).
-- **Template Unit Test**: Penyusunan kerangka awal test suite JUnit 5 (`@WebMvcTest`, Mockito) dan Vitest test specs.
+### 2. Work Assisted by AI
+- **Scaffolding & Boilerplate Generation**: Initial setup of the Spring Boot project structure (Maven dependencies, `pom.xml`, and initial Vite + Vue 3 project scaffolding).
+- **Data Mocking & Seed Generation**: Generation of 100 realistic Indonesian customer call records distributed across the last 3 months (June–September 2026), with sentiment scores realistically categorized (`< 70%` and `>= 70%`).
+- **Unit Test Templates**: Initial drafting of boilerplate test fixtures for JUnit 5 (`@WebMvcTest`, Mockito) and Vitest specs.
 
-### 3. Contoh Prompt Utama (Key Prompts Used)
+### 3. Key Prompts Used
 
-1. **Arsitektur Repository Pure Spring JDBC**:
-   > *"Rancang base repository `AbstractJdbcRepository` menggunakan Pure Spring JDBC (`NamedParameterJdbcTemplate`) tanpa JPA/Hibernate. Sediakan kalkulasi offset pagination terpadu, dynamic sorting, parameterized query binding untuk mencegah SQL injection, dan hook method `getCustomCountQuery()` untuk mendukung query count kustom bila diperlukan."*
+1. **Pure Spring JDBC Repository Architecture**:
+   > *"Design an extensible `AbstractJdbcRepository` base repository using Pure Spring JDBC (`NamedParameterJdbcTemplate`) without JPA/Hibernate overhead. Provide unified offset pagination calculation, dynamic column sorting, parameterized query binding to prevent SQL injection, and a hook method for custom count queries when needed."*
 
 2. **Backend API & Observability Routing**:
-   > *"Buat REST Controller untuk User Story THT-MON-US-001 dengan class routing `@RequestMapping("/api/v1")` dan method `@GetMapping("/call-monitoring")`. Sertakan HTTP servlet filter `ApiLoggingFilter` yang menyematkan distributed `traceId` ke SLF4J MDC, response header `X-Trace-Id`, serta mencatat durasi eksekusi request."*
+   > *"Build a REST Controller for User Story THT-MON-US-001 with class-level routing `@RequestMapping("/api/v1")` and endpoint `@GetMapping("/call-monitoring")`. Include an HTTP servlet filter (`ApiLoggingFilter`) that automatically injects a distributed `traceId` into SLF4J MDC and response header `X-Trace-Id`, while logging incoming request payloads and execution durations."*
 
 3. **Frontend Composable & UI Craftsmanship**:
-   > *"Implementasikan reactive composable `useCallMonitoring` di Vue 3 yang mengelola filter pencarian (debounce 300ms), date range (terkunci maksimal 3 bulan terakhir), customer sentiment filter, multi-column sorting, dan paginasi yang mempertahankan state filter aktif saat berpindah halaman (AC-11). Terapkan tema warna merah khas CIMB Niaga pada tombol, header, dan badge."*
+   > *"Implement a reactive composable `useCallMonitoring` in Vue 3 that manages debounced search filters (300ms), date range selection constrained within the last 3 months, sentiment score category filtering, multi-column sorting, and pagination that preserves active filters across page changes (AC-11). Apply the signature CIMB Niaga red palette across buttons, headers, and UI accent elements."*
 
-### 4. Cara Kandidat Memeriksa dan Memverifikasi Hasil AI (Verification & Quality Control)
+### 4. Verification & Quality Control
 
-Setiap kode yang dihasilkan AI melewati 4 lapis verifikasi ketat oleh kandidat sebelum di-commit:
+All AI-assisted suggestions and code underwent a rigorous 4-layer manual verification and auditing process prior to committing:
 
-1. **Verifikasi Kesesuaian Arsitektur (Architectural Compliance)**:
-   - Memastikan AI tidak menyelundupkan ketergantungan JPA/Hibernate, melainkan 100% patuh pada Native Spring JDBC (`NamedParameterJdbcTemplate`).
-   - Memeriksa struktur service layer agar menggunakan direct `@Service` class tanpa *over-engineering* interface yang redundan.
-   - Memastikan penamaan endpoint strictly mengikuti REST convention (`/api/v1/call-monitoring`).
+1. **Architectural & Design Compliance**:
+   - Strictly ensured no JPA/Hibernate dependencies were introduced, keeping data access 100% native Spring JDBC via `NamedParameterJdbcTemplate`.
+   - Verified that the Service layer uses direct `@Service` classes without redundant single-implementation interfaces, adhering to KISS and YAGNI principles.
+   - Ensured REST conventions and strict DTO encapsulation (`record` types, clear separation between Entity and Response DTOs).
 
-2. **Audit Keamanan & Integritas Query (Security & SQL Injection)**:
-   - Mengaudit setiap baris dynamic SQL untuk memastikan seluruh parameter input (`search`, `startDate`, `endDate`, `sentiment`) dibinding secara aman melalui `MapSqlParameterSource`.
-   - Mengimplementasikan whitelist mapping pada parameter `sortBy` guna memblokir potensi SQL injection via identifier kolom.
+2. **Security & SQL Injection Audit**:
+   - Manually audited every dynamically assembled SQL query to ensure all user parameters (`search`, `startDate`, `endDate`, `sentiment`) are securely bound via `MapSqlParameterSource`.
+   - Implemented strict whitelist validation on sorting identifiers (`ALLOWED_SORT_COLUMNS`) in the repository layer to prevent SQL injection through column identifiers.
 
-3. **Validasi Logika Bisnis & Edge Cases (Business Logic Validation)**:
-   - Memverifikasi kalkulasi offset pagination `(page - 1) * limit` agar tidak terjadi *off-by-one error*.
-   - Memverifikasi filter tanggal 3 bulan terakhir di sisi frontend (`min` dan `max` date) dan backend (inclusive `atStartOfDay` s.d. `atTime(LocalTime.MAX)`).
-   - Memverifikasi konsistensi klasifikasi skor sentimen (`< 70%` dan `>= 70%`) baik pada database query (`NUMERIC(5,2)`) maupun visual badge UI.
+3. **Business Logic & Edge Case Validation**:
+   - Verified pagination offset calculation `(page - 1) * limit` to eliminate off-by-one errors.
+   - Tested 3-month date range boundaries both client-side (`min`/`max` inputs) and server-side (inclusive `atStartOfDay` through `LocalTime.MAX`).
+   - Confirmed sentiment score filtering (`< 70.00` and `>= 70.00`) matched user story criteria across PostgreSQL database queries and Vue badge components.
 
-4. **Eksekusi Pengujian Otomatis & Build Verifikasi (Automated Testing & Build)**:
-   - **Backend Testing**: Mengeksekusi `.\mvnw.cmd test` dan memastikan 15 test suites (Controller, Service, Repository) lulus 100%.
-   - **Frontend Testing**: Mengeksekusi `npm run test` (Vitest) untuk memastikan 7 unit test formatters lulus 100%.
-   - **Production Build**: Mengeksekusi `npm run build` untuk memverifikasi nol compile warning dan tidak ada broken imports.
+4. **Automated Test Execution & Build Verification**:
+   - **Backend Testing**: Executed `.\mvnw.cmd test` to verify all 15 automated test suites across Controller, Service, and Repository layers passed with 0 failures.
+   - **Frontend Testing**: Executed `npm run test` (Vitest) to ensure 100% pass rate across date and number formatting test specs.
+   - **Production Build**: Executed `npm run build` to guarantee clean Vite bundling without warnings, unused imports, or broken asset paths.
