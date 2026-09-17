@@ -15,12 +15,26 @@ import java.sql.Timestamp;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.Map;
 
 @Slf4j
 @Repository
 public class CallMonitoringRepositoryImpl extends AbstractJdbcRepository implements CallMonitoringRepository {
 
     private static final String SELECT_COLUMNS = "cm.call_id, cm.call_timestamp, cm.cs_name, cm.customer_name, cm.sentiment_score";
+
+    private static final Map<String, String> ALLOWED_SORT_COLUMNS = Map.of(
+            "call_id", "cm.call_id",
+            "callid", "cm.call_id",
+            "call_timestamp", "cm.call_timestamp",
+            "calltimestamp", "cm.call_timestamp",
+            "cs_name", "cm.cs_name",
+            "csname", "cm.cs_name",
+            "customer_name", "cm.customer_name",
+            "customername", "cm.customer_name",
+            "sentiment_score", "cm.sentiment_score",
+            "sentimentscore", "cm.sentiment_score"
+    );
 
     public CallMonitoringRepositoryImpl(NamedParameterJdbcTemplate jdbcTemplate) {
         super(jdbcTemplate);
@@ -102,8 +116,17 @@ public class CallMonitoringRepositoryImpl extends AbstractJdbcRepository impleme
             String sortColumn,
             String sortDirection
     ) {
+        String resolvedSortColumn = resolveSortColumn(sortColumn);
         MapSqlParameterSource params = new MapSqlParameterSource();
         StringBuilder queryFrom = buildQueryFrom(request, params);
-        return executePagingResult("COUNT(*) ", SELECT_COLUMNS, queryFrom, params, page, limit, sortColumn, sortDirection, ROW_MAPPER);
+        return executePagingResult("COUNT(*) ", SELECT_COLUMNS, queryFrom, params, page, limit, resolvedSortColumn, sortDirection, ROW_MAPPER);
+    }
+
+    private String resolveSortColumn(String sortBy) {
+        if (sortBy == null || sortBy.isBlank()) {
+            return "cm.call_timestamp";
+        }
+        String key = sortBy.toLowerCase().trim();
+        return ALLOWED_SORT_COLUMNS.getOrDefault(key, key.startsWith("cm.") ? key : "cm.call_timestamp");
     }
 }
